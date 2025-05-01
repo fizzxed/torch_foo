@@ -1,0 +1,28 @@
+[project]
+name = "torch_foo"
+version = "0.1.0"
+description = "Example of a backend extension for torch using the scikit-build-core build backend."
+requires-python = ">=3.8"
+readme = "README.md"
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[build-system]
+requires = ["scikit-build-core", "torch", "numpy", "wheel"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+build.verbose = true
+cmake.version = "CMakeLists.txt"
+# sdist.include = ["src/"]
+build-dir = "build"
+editable.rebuild = true
+wheel.packages = ["src/torch_foo"]
+
+[tool.uv]
+cache-dir = ".uv-cache"
+
+[tool.uv.pip]
+no-build-isolation = true
