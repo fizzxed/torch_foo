@@ -4,7 +4,7 @@ An example of a simple PyTorch extension that uses scikit-build-core (CMake) as 
 We make use of PyTorch's included PyBind11 library to create a Python extension that binds the C++ library.
 
 ```
-── CMakeLists.txt
+├─── CMakeLists.txt
 ├── pyproject.toml
 ├── requirements.txt
 ├── src
