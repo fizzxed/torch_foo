@@ -2,22 +2,16 @@ Python3_add_library(torch_foo MODULE
     src/bindings.cpp
 )
 
-# Set include directories
-target_include_directories(torch_foo PRIVATE
-    ${TORCH_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../foo_core/include
-)
-
 # We have to find the torch_python library so we can make use of torch's pybind11 interface
 # https://github.com/pytorch/pytorch/issues/108041
 # Maybe just including pybind11 ourselves would be better?
 find_library(TORCH_PYTHON_LIBRARY torch_python PATH "${TORCH_INSTALL_PREFIX}/lib")
 message(STATUS "Torch Python Library: ${TORCH_PYTHON_LIBRARY}")
 
-# Link against the core library and libtorch.
+# Link against the core library and the torch python library.
+# This pulls in any include directories and libraries listed as PUBLIC
 target_link_libraries(torch_foo PRIVATE
     foo_core
-    ${TORCH_LIBRARIES}
     ${TORCH_PYTHON_LIBRARY}
 )
 
