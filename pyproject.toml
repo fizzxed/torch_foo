@@ -15,11 +15,10 @@ build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
 build.verbose = true
-cmake.version = "CMakeLists.txt"
-# sdist.include = ["src/"]
-build-dir = "build"
-editable.rebuild = true
-wheel.packages = ["src/torch_foo"]
+cmake.version = "CMakeLists.txt"      # Read from the root CMakeLists.txt for minimum version
+build-dir = "build"                   # Set our build directory to the canonical path
+editable.rebuild = true               # Enable editable mode and rebuild
+wheel.packages = ["python/torch_foo"] # Will copy the contents of the package directory to the wheel for each package listed
 
 [tool.uv]
 cache-dir = ".uv-cache"

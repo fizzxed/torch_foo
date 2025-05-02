@@ -20,9 +20,9 @@ message(STATUS "Torch include directories: ${TORCH_INCLUDE_DIRS}")
 message(STATUS "Torch libraries: ${TORCH_LIBRARIES}")
 
 # TODO: Do we need to add TORCH_CXX_FLAGS, is seven setting CMAKE_CXX_FLAGS a good practice anymore?
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 # Add the core library first. This is the library that does all the work of the extension.
 add_subdirectory(src/foo_core)
-# Add the extension
+# Add the Python C++ extension
 add_subdirectory(src/torch_foo)
