@@ -9,6 +9,9 @@ dependencies = []
 [project.optional-dependencies]
 test = ["pytest"]
 
+[project.entry-points."torch.backends"]
+torch_foo = "torch_foo:_autoload"     # tell PyTorch to autoload this module
+
 [build-system]
 requires = ["scikit-build-core", "torch", "numpy", "wheel"]
 build-backend = "scikit_build_core.build"
