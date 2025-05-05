@@ -7,7 +7,7 @@ Currently:
 We make use of PyTorch's included PyBind11 library to create a Python extension that binds the C++ library.
 
 Goal:
-Register custom C++ operations through the dispatcher which will let us access them from Python. Maybe this will let us use the python limited API. See Notes below.
+Register custom ATen C++ operations through the dispatcher which will let us access them from Python. Maybe this will let us use the python limited API. See Notes below.
 
 ```
 ├── CMakeLists.txt
@@ -63,7 +63,7 @@ Useful headers:
 - `<torch/torch.h>`     - All pure C++ headers for the C++ frontend. Also synonymous with `<torch/all.h>` which has the include statement for all C++ headers.
 - `<torch/python.h>`    - Python bindings for the C++ frontend. (includes `Python.h`)
 - `<torch/extension.h>` - Includes the above two header files. For use in C++ extensions that want Pytorch's C++/Python bindings and also Pybind11.
-- `<torch/library.h>`   - The API for extending PyTorch's core library of operators with user defined operators and data types.
+- `<torch/library.h>`   - The API for extending PyTorch's core library of operators with user defined operators and data types. Provides `TORCH_LIBRARY` and `TORCH_LIBRARY_IMPL` macros, which are important for registering new operators and for providing implementations for those operators, respectively.
 
 Useful links:
 - [`torch._C` creation](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/Module.cpp#L1833) as part of [`initModule`](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/Module.cpp#L1794)

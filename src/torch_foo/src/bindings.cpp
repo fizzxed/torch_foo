@@ -3,7 +3,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(_C, m) {
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     m.doc() = "PyTorch C++ extension for tensor operations";
     m.def("add", &foo_core::add, "Add two tensors element-wise",
           py::arg("a"), py::arg("b"));

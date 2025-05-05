@@ -20,5 +20,12 @@ target_link_libraries(_C PRIVATE
 # Set C++ Standard. pybind11 uses C++14 or higher
 target_compile_features(_C PRIVATE cxx_std_14)
 
+# Add the TORCH_EXTENSION_NAME definition (equivalent to -DTORCH_EXTENSION_NAME={name})
+# So we don't have to keep the C++ code in sync with the build system.
+# PyTorch's BuildExtension sets this for us normally.
+target_compile_definitions(_C PRIVATE
+    TORCH_EXTENSION_NAME=$<TARGET_NAME:_C>
+)
+
 # Install the library to the Python Module torch_foo
 install(TARGETS _C DESTINATION torch_foo)
