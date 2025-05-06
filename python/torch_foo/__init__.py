@@ -6,9 +6,11 @@ os.environ["TORCH_DEVICE_BACKEND_AUTOLOAD"] = "0"
 
 import torch # Ensure torch is loaded first
 import torch_foo
-from torch_foo._C import add, multiply
+# from torch_foo._C import add, multiply
+from torch_foo._C import foo
 
-__all__ = ['add', 'multiply']
+# __all__ = ['add', 'multiply']
+__all__ = ['foo']
 
 # This function is an entrypoint called by PyTorch
 # when running `import torch`. There is no need to do anything.

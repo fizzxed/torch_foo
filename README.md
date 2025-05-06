@@ -44,6 +44,7 @@ Tests:
 python -m pytest tests/
 ```
 
+To disable autoloading of the extension, set the environment variable `TORCH_DEVICE_BACKEND_AUTOLOAD'` to `0`.
 
 To update requirements
 ```
@@ -69,6 +70,8 @@ Useful links:
 - [`torch._C` creation](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/Module.cpp#L1833) as part of [`initModule`](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/Module.cpp#L1794)
 - [`bind_module`](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/api/include/torch/python.h#L217) which creates a pybind11  class object for a `nn::Module` subclass type and adds default bindings. The meat of the work is done in [`add_module_bindings`](https://github.com/pytorch/pytorch/blob/e889937850759fe69a8c7de6326984102ed9b088/torch/csrc/api/include/torch/python.h#L106)
 - [`InitNpuBindings.cpp`](https://github.com/Ascend/pytorch/blob/a72f1dde999b6d78839c9691d11256e1d821a891/torch_npu/csrc/InitNpuBindings.cpp) How the Ascend NPU initializes python/C++ bindings for the NPU torch extension. In particular their module is defined [here](https://github.com/Ascend/pytorch/blob/a72f1dde999b6d78839c9691d11256e1d821a891/torch_npu/csrc/InitNpuBindings.cpp#L170) without using pybind11.
-- [`torch._C` stub](https://github.com/pytorch/pytorch/pull/39375/files) Here they make the `_C` extension a thin C wrapper (`torch/csrc/stub.c`) that links against `torch_python` which provides the `initModule` implementation.  Ascend NPU doesn't bother with the thin C wrapper and has the `PyInit__C` function in `InitNpuBindings.cpp`
+It seems that in the end they still use pybind11 to create bindings if you follow their included headers, so might as well model after the [torch_xla bindings](https://github.com/pytorch/xla/blob/master/torch_xla/csrc/init_python_bindings.cpp)
+- [`torch._C` stub](https://github.com/pytorch/pytorch/pull/39375/files) Here they make the `_C` extension a thin C wrapper (`torch/csrc/stub.c`) that links against `torch_python` which provides the `initModule` implementation.  Ascend NPU doesn't bother with the thin C wrapper and has the `PyInit__C` function in `InitNpuBindings.cpp`. `stub.c` was never intended to keep existing, according to it's [PR review](https://github.com/pytorch/pytorch/pull/12742#discussion_r229892371), so leaning more towards the Ascend NPU's approach is probably a good idea.
 - [`torchgen` creation](https://github.com/pytorch/pytorch/issues/73212) Here PyTorch decided to make the pytorch codegen utilities publically available to external libraries that have C++ extensions (us). [`gen.py`](https://github.com/pytorch/pytorch/blob/main/torchgen/gen.py) is the entry point for generating code.
 - [autoloading](https://pytorch.org/tutorials/prototype/python_extension_autoload.html) is a nice to have so users don't have to manually import the extension module.
+- [extension-cpp](https://github.com/pytorch/extension-cpp) An example of writing a C++/CUDA extension for PyTorch that implements a custom op for both CPU and CUDA written by the pytorch team.
