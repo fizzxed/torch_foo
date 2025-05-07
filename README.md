@@ -75,3 +75,4 @@ It seems that in the end they still use pybind11 to create bindings if you follo
 - [`torchgen` creation](https://github.com/pytorch/pytorch/issues/73212) Here PyTorch decided to make the pytorch codegen utilities publically available to external libraries that have C++ extensions (us). [`gen.py`](https://github.com/pytorch/pytorch/blob/main/torchgen/gen.py) is the entry point for generating code.
 - [autoloading](https://pytorch.org/tutorials/prototype/python_extension_autoload.html) is a nice to have so users don't have to manually import the extension module.
 - [extension-cpp](https://github.com/pytorch/extension-cpp) An example of writing a C++/CUDA extension for PyTorch that implements a custom op for both CPU and CUDA written by the pytorch team.
+- [Custom Operators Manual](https://docs.google.com/document/d/1_W62p8WJOQQUzPsJYa7s701JXt0qf2OfLub2sbkHOaU/) for information on how to extend the list of PyTorch operators.

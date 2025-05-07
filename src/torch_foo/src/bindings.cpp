@@ -33,12 +33,30 @@
 
 namespace torch_foo {
 namespace {
-    void InitFooBindings(py::module m)
-    {
-        // Extra initialization code here
-        // Example of adding a function to the module:
-        m.def("foo", []() { return "foo"; }, "Foo function");
-    }
+void InitFooBindings(py::module m)
+{
+    // Extra initialization code here
+    // Example of adding a function to the module:
+    m.def("foo", []() { return "foo"; }, "Foo function");
+    // m.def("add", &foo_core::add, "add two tensors element-wise", py::arg("a"), py::arg("b"))
+    // m.def("multiply", &foo_core::multiply, "Multiply two tensors element-wise", py::arg("a"), py::arg("b"));
+}
+
+// Register the operators
+TORCH_LIBRARY(foo, m)
+{
+    m.def("mymuladd(Tensor a, Tensor b, float c) -> Tensor");
+    m.def("mymul(Tensor a, Tensor b) -> Tensor");
+    m.def("myadd_out(Tensor a, Tensor b, Tensor(a!) out) -> ()");
+}
+// Register the implementations for the operators. Will be updating this to privateuse1 soon.
+TORCH_LIBRARY_IMPL(foo, CPU, m)
+{
+    m.impl("mymuladd", &foo_core::mymuladd_cpu);
+    m.impl("mymul", &foo_core::mymul_cpu);
+    m.impl("myadd_out", &foo_core::myadd_out_cpu);
+}
+
 } // namespace
 } // namespace torch_foo
 
