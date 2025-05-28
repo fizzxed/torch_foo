@@ -3,7 +3,7 @@ name = "torch_foo"
 version = "0.1.0"
 description = "Example of a backend extension for torch using the scikit-build-core build backend."
 requires-python = ">=3.8"
-readme = "README.md"
+readme = "python/torch_foo/README.md"
 dependencies = []
 
 [project.optional-dependencies]
@@ -22,6 +22,10 @@ cmake.version = "CMakeLists.txt"      # Read from the root CMakeLists.txt for mi
 build-dir = "build"                   # Set our build directory to the canonical path
 editable.rebuild = true               # Enable editable mode and rebuild
 wheel.packages = ["python/torch_foo"] # Will copy the contents of the package directory to the wheel for each package listed
+
+[tool.scikit-build.cmake.define]
+FOO_WITH_PYTHON = "ON"                # Tell the CMake build system to build our python extension.'
+FOO_WITH_TESTS = "ON"                 # Run all our tests, probably should only test the python bits from the pyproject. TODO.
 
 [tool.uv]
 cache-dir = ".uv-cache"

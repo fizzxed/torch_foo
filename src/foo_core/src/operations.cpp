@@ -63,6 +63,21 @@ void myadd_out_cpu(const at::Tensor& a, const at::Tensor& b, at::Tensor& out) {
   }
 }
 
+// Register the new operators
+TORCH_LIBRARY(foo, m)
+{
+    m.def("mymuladd(Tensor a, Tensor b, float c) -> Tensor");
+    m.def("mymul(Tensor a, Tensor b) -> Tensor");
+    m.def("myadd_out(Tensor a, Tensor b, Tensor(a!) out) -> ()");
+}
+// Register the implementations for the operators.
+TORCH_LIBRARY_IMPL(foo, CPU, m)
+{
+    m.impl("mymuladd", &foo_core::mymuladd_cpu);
+    m.impl("mymul", &foo_core::mymul_cpu);
+    m.impl("myadd_out", &foo_core::myadd_out_cpu);
+}
+
 // Using the torch::Tensor API which comes with autograd.
 torch::Tensor add(const torch::Tensor& a, const torch::Tensor& b) {
     return a + b;
