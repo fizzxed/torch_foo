@@ -5,8 +5,7 @@ ENV_AUTOLOAD = os.getenv("TORCH_DEVICE_BACKEND_AUTOLOAD", "1")
 os.environ["TORCH_DEVICE_BACKEND_AUTOLOAD"] = "0"
 
 import torch # Ensure torch is loaded first
-# from torch_foo._C import add, multiply
-from torch_foo._C import bar
+from torch_foo._C import add, multiply
 from torch_foo import foo
 
 __all__ = ['add', 'multiply']

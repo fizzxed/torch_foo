@@ -53,7 +53,7 @@ void InitFooBindings(py::module m)
     }, "Returns the total number of devices available");
 
     // Functions over torch tensors
-    m.def("add", &foo_core::add, "add two tensors element-wise", py::arg("a"), py::arg("b"))
+    m.def("add", &foo_core::add, "add two tensors element-wise", py::arg("a"), py::arg("b"));
     m.def("multiply", &foo_core::multiply, "Multiply two tensors element-wise", py::arg("a"), py::arg("b"));
 }
 
