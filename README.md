@@ -113,6 +113,21 @@ pytorch-nanobind-cuda-example
   - It seems like all pytorch backend extensions now register boxed kernel fallbacks. See Intel's [extension as an example](https://github.com/HabanaAI/gaudi-pytorch-bridge/blob/1167bf4dbc9fc0d1a20102d4ac91b406d44a2d2e/hpu_ops/cpu_fallback.cpp#L116) (Note that they build off a fork of pytorch that adds their dispatch keys to the dispatcher, so they don't use PrivateUse1)
 - At somepoint we will have to rename the backend. This can be done in C++ as well which could be useful. NPU also does this [here](https://github.com/Ascend/pytorch/blob/24a508cd1022f9a383dbc53f0a9ab6b526e4fcda/torch_npu/csrc/core/npu/impl/NPUGuardImpl.cpp#L188) though they do also do it in the [`__init__.py` file](https://github.com/Ascend/pytorch/blob/24a508cd1022f9a383dbc53f0a9ab6b526e4fcda/torch_npu/__init__.py#L185) but according to the [implementation](register_privateuse1_backend) this is fine since both set it to "npu"
 - [`generate_methods_for_privateuse1_backend`](https://docs.pytorch.org/docs/stable/generated/torch.utils.generate_methods_for_privateuse1_backend.html) to monkeypatch onto the torch objects. In the [pr comments](https://github.com/pytorch/pytorch/pull/98066#issuecomment-1496128826) they mention that the backend's ought to do this themselves for proper typing and are just provided for convenience. User's don't absolutely need this, but is a nice to have.
+- The Pytorch tutorials imply that we could get away with just writing and registering our custom aten kernels for privateuse1 in C++. However, if we did that we would only be able to call into Aten ops by bypassing Pytorch sugaring via:
+```python
+tensor =  torch.ops.aten.empty.memory_format(
+    [2, 2],
+    dtype=torch.float32,
+    layout=torch.strided,
+    device=torch.device("privateuseone:0"),
+    pin_memory=False,
+    memory_format=torch.contiguous_format
+)
+```
+If we wanted to fully integrate with the python side of Pytorch, we also need to expose a backend module that implements the following functions [referenced here](https://docs.pytorch.org/docs/stable/generated/torch.utils.rename_privateuse1_backend.html):
+  1. is_available() -> bool Returns a bool indicating if our backend is currently available.
+  2. current_device() -> int Returns the index of a currently selected device.
+And then register it via `torch._register_device_module("foo", BackendModule)`
 
 
 Useful headers:
@@ -134,3 +149,4 @@ It seems that in the end they still use pybind11 to create bindings if you follo
 - [State of Cuda Extensions in Pytorch](https://github.com/pytorch/pytorch/issues/152032)
 - [build system overview](https://stackoverflow.com/questions/25941536/what-is-a-cmake-generator/61651241#61651241)
 - [spglib](https://github.com/spglib/spglib/tree/develop) an example of a project that uses CMake and scikit-build-core to create a python extension over their C library. Also builds both static and shared libraries, could be useful to support static libtorch.
+- [pytorch internals blogpost](https://lernapparat.de/selective-excursion-into-pytorch-internals/) for a look into how some important parts of PyTorch worked circa 2018.

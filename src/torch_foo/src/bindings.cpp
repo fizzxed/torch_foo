@@ -43,13 +43,23 @@ at::Tensor temp_func(const at::Tensor& a, const at::Tensor& b)
 void InitFooBindings(py::module m)
 {
     // Extra initialization code here
-    // Example of adding a function to the module:
-    m.def("foo", []() { return "foo"; }, "Foo function");
-    // m.def("add", &foo_core::add, "add two tensors element-wise", py::arg("a"), py::arg("b"))
-    // m.def("multiply", &foo_core::multiply, "Multiply two tensors element-wise", py::arg("a"), py::arg("b"));
+
+    // Functions to be exposed for the backend module
+    m.def("current_device", []() {
+        return 0; // Hardcoded 0 device.
+    }, "Returns the curent device index");
+    m.def("device_count", []() {
+        return 2; // Hardcode 2 total devices.
+    }, "Returns the total number of devices available");
+
+    // Functions over torch tensors
+    m.def("add", &foo_core::add, "add two tensors element-wise", py::arg("a"), py::arg("b"))
+    m.def("multiply", &foo_core::multiply, "Multiply two tensors element-wise", py::arg("a"), py::arg("b"));
 }
 
 } // namespace
 } // namespace torch_foo
 
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) { torch_foo::InitFooBindings(m); }
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+    torch_foo::InitFooBindings(m);
+}
