@@ -18,7 +18,7 @@
 #include <torch/library.h>
 #include <torch/torch.h>
 
-#include "DummyDeviceGuard.h"
+#include "FooDeviceGuard.h"
 
 namespace foo_core {
 
@@ -55,8 +55,8 @@ at::Tensor custom_empty_memory_format(c10::IntArrayRef size, std::optional<c10::
         !c10::pinned_memory_or_default(pin_memory_opt),
         "Pin memory can only be on CPU"
     )
-    const DummyDeviceGuard guard(device); // Example of using our specialized device guard
-    auto allocator = c10::GetAllocator(c10::DeviceType::PrivateUse1); // Will get the global_dummy_allocator we registered
+    const FooDeviceGuard guard(device); // Example of using our specialized device guard
+    auto allocator = c10::GetAllocator(c10::DeviceType::PrivateUse1); // Will get the foo allocator we registered
     constexpr c10::DispatchKeySet private_use_ks(c10::DispatchKey::PrivateUse1);
     std::cout << "Custom aten::empty.memory_format() called!" << std::endl;
     return at::detail::empty_generic(size, allocator, private_use_ks, c10::dtype_or_default(dtype), memory_format_opt);
@@ -73,7 +73,7 @@ at::Tensor custom_empty_strided(c10::IntArrayRef size, c10::IntArrayRef stride, 
     TORCH_CHECK(
         !c10::pinned_memory_or_default(pin_memory_opt),
         "Pin memory can only be on CPU");
-    const DummyDeviceGuard guard(device);
+    const FooDeviceGuard guard(device);
     constexpr c10::DispatchKeySet private_use_ks(c10::DispatchKey::PrivateUse1);
     auto allocator = c10::GetAllocator(c10::DeviceType::PrivateUse1);
     std::cout << "Custom aten::empty.strided() called!" << std::endl;
@@ -82,7 +82,7 @@ at::Tensor custom_empty_strided(c10::IntArrayRef size, c10::IntArrayRef stride, 
 
 at::Tensor& custom_copy_(at::Tensor& self, const at::Tensor& src, bool non_blocking)
 {
-    const DummyDeviceGuard guard(self.device());
+    const FooDeviceGuard guard(self.device());
     std::cout << "Custom aten::copy_() called!" << std::endl;
     TORCH_CHECK(is_foo(self), "self must be on a foo device to dispatch here");
 

@@ -1,17 +1,17 @@
-#include "DummyDeviceGuardImpl.h"
+#include "FooDeviceGuardImpl.h"
 #include <c10/core/DeviceType.h>
 #include <c10/core/impl/InlineDeviceGuard.h>
 
 namespace foo_core {
 
-// A variant of c10::DeviceGuard specialized for our DummyDeviceGuardImpl
+// A variant of c10::DeviceGuard specialized for our FooDeviceGuardImpl
 // It accepts integer indices (interpreting them as dummy devices) and is
 // a little more efficient than DeviceGuard (it compiles to straight line
-// DummyDeviceGuard::[set|get]Device calls). However, it can only be used
+// FooDeviceGuard::[set|get]Device calls). However, it can only be used
 // from code that links against this directly.
 // It also provides a good place to put documentation and a way to avoid
 // explosing nasty template errors.
-struct DummyDeviceGuard {
+struct FooDeviceGuard {
     /// No default constructor
     /// Note taken from InlineDeviceGuard.h
     /// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,23 +23,23 @@ struct DummyDeviceGuard {
     /// restore to happen if you don't ever actually set the device).
     /// We remove the constructor here to encourage you to think about
     /// what you actually want to happen.
-    explicit DummyDeviceGuard() = delete;
+    explicit FooDeviceGuard() = delete;
 
     /// Set the current dummy device to the passed device index
-    explicit DummyDeviceGuard(c10::DeviceIndex device_index) : guard_(device_index) {}
+    explicit FooDeviceGuard(c10::DeviceIndex device_index) : guard_(device_index) {}
 
     /// Set the current dummy device to the passed device. Errors if the passed device
     /// is not a dummy device.
-    explicit DummyDeviceGuard(c10::Device device) : guard_(device) {}
+    explicit FooDeviceGuard(c10::Device device) : guard_(device) {}
 
     // Copy is not allowed
-    DummyDeviceGuard(const DummyDeviceGuard&) = delete;
-    DummyDeviceGuard& operator=(const DummyDeviceGuard&) = delete;
+    FooDeviceGuard(const FooDeviceGuard&) = delete;
+    FooDeviceGuard& operator=(const FooDeviceGuard&) = delete;
 
     // Move is disallowed, as device guards do not have uninitialized state,
     // which is required for moves on types with nontrivial destructors
-    DummyDeviceGuard(DummyDeviceGuard&& other) = delete;
-    DummyDeviceGuard& operator=(DummyDeviceGuard&& other) = delete;
+    FooDeviceGuard(FooDeviceGuard&& other) = delete;
+    FooDeviceGuard& operator=(FooDeviceGuard&& other) = delete;
 
     /// Sets the dummy device to the given device. Errors if the given device
     /// is not a dummy device
@@ -76,6 +76,6 @@ struct DummyDeviceGuard {
     }
 
 private:
-    c10::impl::InlineDeviceGuard<DummyDeviceGuardImpl> guard_;
+    c10::impl::InlineDeviceGuard<FooDeviceGuardImpl> guard_;
 };
 }

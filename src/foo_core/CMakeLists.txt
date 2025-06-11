@@ -6,8 +6,8 @@ add_library(foo_core STATIC
     src/cpu_fallback.cpp
     src/register_name.cpp
     src/aten.cpp
-    src/DummyDeviceGuardImpl.cpp
-    src/DummyAllocator.cpp
+    src/FooDeviceGuardImpl.cpp
+    src/FooAllocator.cpp
 )
 
 # Set position independent code. This is defaulted to ON for shared libraries. Keeping for verbosity.

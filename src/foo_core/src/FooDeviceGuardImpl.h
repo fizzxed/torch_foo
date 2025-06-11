@@ -35,11 +35,11 @@ namespace foo_core {
 // inside the code internals like kernels. See the note at the beginning of InlineDeviceGuard.h
 //
 // TODO: put this in an impl namespace.
-struct DummyDeviceGuardImpl final : public c10::impl::DeviceGuardImplInterface {
+struct FooDeviceGuardImpl final : public c10::impl::DeviceGuardImplInterface {
     static constexpr c10::DeviceType static_type = c10::DeviceType::PrivateUse1;
 
-    DummyDeviceGuardImpl() {}
-    explicit DummyDeviceGuardImpl(c10::DeviceType t);
+    FooDeviceGuardImpl() {}
+    explicit FooDeviceGuardImpl(c10::DeviceType t);
     c10::DeviceType type() const override
     {
         return c10::DeviceType::PrivateUse1;

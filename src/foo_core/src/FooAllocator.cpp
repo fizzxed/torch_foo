@@ -17,8 +17,8 @@ namespace foo_core {
 // (PrivateUse1 for open registration devices)
 
 // A dummy allocator for our custom device, that secretly uses the CPU
-struct DummyAllocator final : c10::Allocator {
-    DummyAllocator() = default;
+struct FooAllocator final : c10::Allocator {
+    FooAllocator() = default;
 
     c10::DataPtr allocate(size_t nbytes) override
     {
@@ -67,8 +67,8 @@ c10::intrusive_ptr<c10::StorageImpl> make_custom_storage_impl(
 
 
 // Register the allocator
-// static DummyAllocator global_dummy_alloc;
-// REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, &global_dummy_alloc);
+// static FooAllocator global_foo_alloc;
+// REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, &global_foo_alloc);
 // Use the CPU Allocator
 REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, at::getCPUAllocator())
 
