@@ -1,5 +1,7 @@
+#include <ATen/Context.h> // delete soon
 #include <c10/core/Allocator.h>
 #include <c10/core/DeviceType.h>
+#include <c10/core/StorageImpl.h>
 #include <iostream>
 #include <c10/core/impl/alloc_cpu.h>
 
@@ -45,8 +47,38 @@ struct DummyAllocator final : c10::Allocator {
     }
 };
 
+
+c10::intrusive_ptr<c10::StorageImpl> make_custom_storage_impl(
+    c10::StorageImpl::use_byte_size_t,
+    c10::SymInt size_bytes,
+    c10::DataPtr data_ptr,
+    c10::Allocator* allocator,
+    bool resizable)
+{
+    c10::intrusive_ptr<c10::StorageImpl> custom_storage_impl;
+    std::cout << "make_storage_impl, bytes = "<< size_bytes << std::endl;
+    if (data_ptr == nullptr){
+        custom_storage_impl = c10::make_intrusive<c10::StorageImpl>(c10::StorageImpl::use_byte_size_t(), size_bytes, allocator, resizable);
+    } else {
+        custom_storage_impl = c10::make_intrusive<c10::StorageImpl>(c10::StorageImpl::use_byte_size_t(), size_bytes, std::move(data_ptr), allocator, resizable);
+    }
+    return custom_storage_impl;
+}
+
+
 // Register the allocator
-static DummyAllocator global_dummy_alloc;
-REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, &global_dummy_alloc);
+// static DummyAllocator global_dummy_alloc;
+// REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, &global_dummy_alloc);
+// Use the CPU Allocator
+REGISTER_ALLOCATOR(c10::DeviceType::PrivateUse1, at::getCPUAllocator())
+
+// int register_storage() {
+//     std::cout << "Registered storage" << std::endl;
+//     c10::SetStorageImplCreate(c10::DeviceType::PrivateUse1, &make_custom_storage_impl);
+//     return 0;
+// }
+// static const int _temp_ = register_storage();
+
+
 
 } // namespace foo_core

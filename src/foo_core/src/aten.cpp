@@ -1,18 +1,31 @@
 #include <ATen/DeviceGuard.h>
 #include <ATen/EmptyTensor.h>
+#include <ATen/core/TensorBody.h>
+#include <ATen/ops/_to_copy_native.h>
 #include <c10/core/Allocator.h>
 #include <c10/core/Device.h>
 #include <c10/core/DeviceGuard.h>
+#include <c10/core/DeviceType.h>
 #include <c10/core/DispatchKey.h>
 #include <c10/core/DispatchKeySet.h>
+#include <c10/core/Layout.h>
+#include <c10/core/ScalarType.h>
 #include <c10/core/TensorOptions.h>
+#include <c10/util/ArrayRef.h>
+#include <cstring>
 #include <iostream>
+#include <optional>
 #include <torch/library.h>
 #include <torch/torch.h>
 
-
+#include "DummyDeviceGuard.h"
 
 namespace foo_core {
+
+inline bool is_foo(const at::Tensor& tensor)
+{
+    return tensor.is_privateuseone();
+}
 
 // =====================================
 // ============= KERNELS ===============
@@ -28,13 +41,82 @@ namespace foo_core {
 // If this is the case, then this kernel is where you'll be responsible for creating and returning
 // a fresh at::Tensor object, that properly stores a TensorImpl of your subclass.
 
-at::Tensor custom_empty_memory_format(at::IntArrayRef size, c10::optional<at::ScalarType> dtype, c10::optional<at::Layout> layout, c10::optional<at::Device> device, c10::optional<bool> pin_memory, c10::optional<at::MemoryFormat> memory_format)
+// Empty Tensor Factories
+at::Tensor custom_empty_memory_format(c10::IntArrayRef size, std::optional<c10::ScalarType> dtype_opt, std::optional<c10::Layout> layout_opt, std::optional<c10::Device> device_opt, std::optional<bool> pin_memory_opt, std::optional<c10::MemoryFormat> memory_format_opt)
 {
-    const c10::OptionalDeviceGuard guard(device);
-    std::cout << "Custom aten::empty.memory_format() called!" << std::endl;
+    const c10::ScalarType dtype = c10::dtype_or_default(dtype_opt);
+    const c10::Device device = c10::device_or_default(device_opt);
+    TORCH_CHECK(device.is_privateuseone());
+    TORCH_CHECK(
+        c10::layout_or_default(layout_opt) == c10::Layout::Strided,
+        "Non strided layout not supported"
+    )
+    TORCH_CHECK(
+        !c10::pinned_memory_or_default(pin_memory_opt),
+        "Pin memory can only be on CPU"
+    )
+    const DummyDeviceGuard guard(device); // Example of using our specialized device guard
     auto allocator = c10::GetAllocator(c10::DeviceType::PrivateUse1); // Will get the global_dummy_allocator we registered
     constexpr c10::DispatchKeySet private_use_ks(c10::DispatchKey::PrivateUse1);
-    return at::detail::empty_generic(size, allocator, private_use_ks, c10::dtype_or_default(dtype), memory_format);
+    std::cout << "Custom aten::empty.memory_format() called!" << std::endl;
+    return at::detail::empty_generic(size, allocator, private_use_ks, c10::dtype_or_default(dtype), memory_format_opt);
+}
+
+at::Tensor custom_empty_strided(c10::IntArrayRef size, c10::IntArrayRef stride, std::optional<c10::ScalarType> dtype_opt, std::optional<c10::Layout> layout_opt, std::optional<c10::Device> device_opt, std::optional<bool> pin_memory_opt)
+{
+    const c10::ScalarType dtype = c10::dtype_or_default(dtype_opt);
+    const c10::Device device = c10::device_or_default(device_opt);
+    TORCH_CHECK(device.is_privateuseone());
+    TORCH_CHECK(
+        c10::layout_or_default(layout_opt) == c10::Layout::Strided,
+        "Non strided layout not supported");
+    TORCH_CHECK(
+        !c10::pinned_memory_or_default(pin_memory_opt),
+        "Pin memory can only be on CPU");
+    const DummyDeviceGuard guard(device);
+    constexpr c10::DispatchKeySet private_use_ks(c10::DispatchKey::PrivateUse1);
+    auto allocator = c10::GetAllocator(c10::DeviceType::PrivateUse1);
+    std::cout << "Custom aten::empty.strided() called!" << std::endl;
+    return at::detail::empty_strided_generic(size, stride, allocator, private_use_ks, dtype);
+}
+
+at::Tensor& custom_copy_(at::Tensor& self, const at::Tensor& src, bool non_blocking)
+{
+    const DummyDeviceGuard guard(self.device());
+    std::cout << "Custom aten::copy_() called!" << std::endl;
+    TORCH_CHECK(is_foo(self), "self must be on a foo device to dispatch here");
+
+    if (self.numel() == 0) {
+        return self;
+    }
+    // Secretly Just perform the CPU copy
+    return at::native::copy_(self, src, non_blocking);
+
+}
+
+at::Tensor custom__to_copy(const at::Tensor& self, std::optional<c10::ScalarType> dtype_opt, std::optional<c10::Layout> layout_opt, std::optional<c10::Device> device_opt, std::optional<bool> pin_memory_opt, bool non_blocking, std::optional<c10::MemoryFormat> memory_format_opt)
+{
+    const c10::ScalarType dtype = c10::dtype_or_default(dtype_opt);
+    const c10::Device device = c10::device_or_default(device_opt);
+
+    std::cout << "Custom aten::_to_copy() called!" << std::endl;
+    if (is_foo(self) && device.type() == c10::DeviceType::CPU) {
+        // Foo -> CPU
+        auto cpu_tensor = at::empty_like(self, self.options().device(c10::DeviceType::CPU));
+        cpu_tensor.copy_(self);
+        return cpu_tensor;
+
+    } else if (self.is_cpu() && device.is_privateuseone()) {
+        // CPU -> Foo
+        auto cpu_copy = self.to(self.options().device(at::kCPU), non_blocking, true, memory_format_opt);
+        auto copy = custom_empty_strided(self.sizes(), self.strides(), dtype_opt, layout_opt, device_opt, pin_memory_opt);
+        std::memcpy(copy.storage().data_ptr().get(), self.storage().data_ptr().get(), self.storage().nbytes());
+        return copy;
+    } else {
+        // Unsupported
+        TORCH_CHECK(false, "Unsupported");
+        return self;
+    }
 }
 
 at::Tensor custom__copy_from(const at::Tensor& self, const at::Tensor& dst, bool non_blocking)
@@ -65,8 +147,8 @@ at::Tensor custom_add(const at::Tensor& self_, const at::Tensor& other_, const a
     const at::OptionalDeviceGuard guard(at::device_of(self_));
     std::cout << "Custom aten::add.Tensor() called!" << std::endl;
     TORCH_CHECK(self_.sizes() == other_.sizes());
-    TORCH_INTERNAL_ASSERT(self_.device().type() == at::DeviceType::CPU); // These device guards will become different once we implement PrivateUse1 device guards
-    TORCH_INTERNAL_ASSERT(other_.device().type() == at::DeviceType::CPU);
+    TORCH_INTERNAL_ASSERT(self_.device().type() == c10::DeviceType::PrivateUse1); // These device guards will become different once we implement PrivateUse1 device guards
+    TORCH_INTERNAL_ASSERT(other_.device().type() == c10::DeviceType::PrivateUse1);
     at::Tensor self = self_.contiguous();
     at::Tensor other = other_.contiguous();
     at::Tensor result = torch::empty(self.sizes(), self.options());
@@ -80,10 +162,14 @@ at::Tensor custom_add(const at::Tensor& self_, const at::Tensor& other_, const a
 }
 
 TORCH_LIBRARY_IMPL(aten, PrivateUse1, m) {
-    m.impl("add.Tensor", TORCH_FN(custom_add));
+    // m.impl("add.Tensor", TORCH_FN(custom_add));
     m.impl("empty.memory_format", TORCH_FN(custom_empty_memory_format));
-    m.impl("fill_.Scalar", &custom_fill__scalar);
-    m.impl("_copy_from", TORCH_FN(custom__copy_from));
+    m.impl("empty_strided", TORCH_FN(custom_empty_strided));
+    m.impl("copy_", TORCH_FN(custom_copy_));
+    m.impl("_to_copy", TORCH_FN(custom__to_copy));
+
+    m.impl("fill_.Scalar", TORCH_FN(custom_fill__scalar));
+    // m.impl("_copy_from", TORCH_FN(custom__copy_from));
 }
 
 } // namespace foo_core

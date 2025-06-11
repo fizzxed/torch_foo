@@ -6,7 +6,7 @@ add_library(foo_core STATIC
     src/cpu_fallback.cpp
     src/register_name.cpp
     src/aten.cpp
-    src/DummyDeviceGuard.cpp
+    src/DummyDeviceGuardImpl.cpp
     src/DummyAllocator.cpp
 )
 
